@@ -1,0 +1,832 @@
+  
+---
+title: 'Tipología y ciclo de vida de los datos: PRA2'
+author: "Autor: Pablo Benito y Miquel Rived"
+date: "Junio 2021"
+output:
+  html_document:
+    highlight: default
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+    toc_depth: 2
+    includes:
+      in_header: PEC-header.html
+  pdf_document:
+    highlight: zenburn
+    toc: yes
+  word_document: default
+editor_options: 
+  chunk_output_type: inline
+---
+
+******
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Cargamos los paquetes R que vamos a usar
+library(ggplot2)
+library(dplyr)
+library(knitr)
+library(stringr)
+library(lubridate)
+library(purrr)
+library(RcmdrMisc)
+# library(ggbiplot)
+library(summarytools)
+library(kableExtra)
+```
+
+# Descripción del dataset. ¿Por qué es importante y qué pregunta/problema pretende responder?
+
+El dataset empleado en esta práctica es el obtenido en la PRA1 del semestre pasado y es el resultado de un proceso de *scraping* de la web de *reviews* de cámaras digitales dpreview.com. Contiene 2490 registros con 125 columnas de tipo numérico y categórico, representando cada fila una cámara digital. 
+
+Lo más interesante del conjunto de datos extraído es la gran cantidad de especificaciones diferentes que se encuentran, así como el gran abanico de cámaras digitales que lo abarcan, además de que al haber sido extraídas de una web, constituyen datos reales referentes a cámaras.
+
+En primer lugar se quiere analizar que características técnicas afectan más en el aumento de precio de una cámara digital.
+
+Por otro lado, se tratará de determinar qué cámaras son las más valoradas por los usuarios o los expertos, por lo que se pretenderá analizar las marcas más valoradas, si el precio influye en la valoración final, o que tipo de especificaciones son las que buscan los usuarios en una cámara digital para realizar una valoración alta.
+
+Los datos permiten responder a preguntas del tipo:
+
+- ¿Cuál es la cámara mejor valorada por los usuarios?
+- ¿Cuál es la cámara más cara y más ergónomica?
+- ¿Qué cámara es capaz de disparar más fotografías en modo ráfaga?
+- ¿Cuál es la cámara con GPS más ligera y mayor autonomía de batería?
+
+Estas preguntas pueden variar a lo largo de las prácticas, ya que disponemos de una gran variedad de cámaras y campos para analizarlas que seguro que al visualizar con mayor detenimiento nos hacen hacernos nuevas preguntas.
+
+La diferencia principal con los otros estudios encontrados de dpreview.com es la gran variedad de campos que hemos seleccionado para analizar las cámaras.
+
+# Integración y selección de los datos de interés a analizar
+
+> Se debe abrir el archivo de datos y examinar el tipo de datos con los que R ha interpretado cada variable. Examinar también los valores resumen de cada tipo de variable.
+
+
+En primer lugar cargamos el archivo utilizando la función `read.csv`. añadimos el parámetro `stringsAsFactors=False` para que no convierta en factores los atributos que detecte como `String`. Posteriormente, nosotros realizaremos esa conversión para aquellos campos que consideremos oportuno.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Cargamos el fichero de datos
+data <- read.csv('dpreview.csv',stringsAsFactors = FALSE)
+```
+
+Verificamos el tipo de datos asignado por R a cada atributo utilizando el comando `str` (`structure`):
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Verificamos la estructura del conjunto de datos
+str(data)
+```
+
+Los atributos identificados, junto a su significado se resumen en la siguiente tabla:
+
+```{r echo=TRUE, message=FALSE, warning=FALSE,result='asis'}
+description_df <- data.frame (
+                    #campo  = colnames(data),
+                    tipo = sapply(data, class),
+                    descripción = c(
+                      "Velocidad de obturación máxima .",
+                      "Puntuación de review",
+                      "Puntuación calidad de construcción",
+                      "Número de puntos de enfoque",
+                      "Tipo de autofoco",
+                      "Enlace a la página",
+                      "Formatos de almacenamiento de vídeo",
+                      "Pantalla táctil",
+                      "Marca",
+                      "Puntos de la pantalla",
+                      "Disparos en modo ráfaga",
+                      "Conexión para micrófono",
+                      "Velocidad de obturación mínima",
+                      "Prioridad de obturador",
+                      "Dimensiones",
+                      "Número de lentes",
+                      "Puntuación de rendimiento",
+                      "Enlace a la review",
+                      "Amplificación del visor",
+                      "Observaciones sobre la estabilización de imagen",
+                      "Puntuación de calidad de pantalla",
+                      "Observaciones sobre GPS",
+                      "Número de usuarios que poseen la cámara",
+                      "ISO mínimo",
+                      "Puntuación de visor",
+                      "Puntuación de velocidad y respuesta",
+                      "Zoom óptico",
+                      "Número de usuarios que desean tener la cámara",
+                      "Modos de flash",
+                      "Balances de blancos personalizados",
+                      "Formato sin compresión",
+                      "Fecha de publicación",
+                      "Grabación de timelapse",
+                      "Preajustes de balances de blancos",
+                      "Multiplicador de la distancia focal",
+                      "Resolución máxima",
+                      "Puntuación de calidad de vídeo",
+                      "Vista en directo",
+                      "Descripción de la batería",
+                      "Resolución del sensor",
+                      "ISO máximo",
+                      "Tipo de pantalla",
+                      "Familia de la cámara",
+                      "Puntuación de imagen fija",
+                      "Cobertura del visor",
+                      "Mando a distancia",
+                      "Puntuación general",
+                      "Tamaño del sensor",
+                      "Velocidad de obturación máxima",
+                      "Modos de medición",
+                      "Estanqueidad",
+                      "Observaciones sobre conexión inalámbrica",
+                      "Distancia focal equivalente",
+                      "Modelo de cámara",
+                      "Formato de bateria",
+                      "Resolución del visor",
+                      "Puntuación de modo vídeo",
+                      "Modo de pantalla articulada",
+                      "Puntuación de calidad de imagen en RAW.",
+                      "Puntuación de conectividad",
+                      "Premio (Gold, Silver)",
+                      "Niveles de calidad JPEG",
+                      "Tamaño de la pantalla",
+                      "Peso con batería", # Extraer gramos por expresión regular
+                      "Píxeles efectivos",
+                      "Especificaciones rápidas",
+                      "Montura de lente",
+                      "Modo de exposición manual",
+                      "Puntuación de medición y enfoque",
+                      "Tipo de sensor",
+                      "Distancia mínima de enfoque",
+                      "Durabilidad",
+                      "Altavoz",
+                      "Resoluciones",
+                      "Número de usuarios que han poseido la cámara",
+                      "Puntuación de calidad de imagen JPG",
+                      "Puntuación de la óptica",
+                      "Tipo de visor",
+                      "Precio recomendado", # extraer mediante expresión regular el número
+                      "Puntuación de ergonomía y manejo",
+                      "Puntuación de rendimiento de flash",
+                      "GPS",
+                      "Puntuación de rendimiento en velocidad",
+                      "Cuenta atrás",
+                      "USB",
+                      "Otras resoluciones",
+                      "Puntuación de características",
+                      "Wireless",
+                      "Flash incluido",
+                      "Compensación de la exposición",
+                      "Puntuación de exactitud de exposición y enfoque",
+                      "Puntuación de ergonomía y manejo",
+                      "Flash externo",
+                      "AE Bracketing",
+                      "Ciclos de vida de la batería",
+                      "Carga por USB",
+                      "HDMI",
+                      "Modos",
+                      "Zoom digital",
+                      "Apertura máxima",
+                      "Rango del flash",
+                      "ISO",
+                      "Puntuación de review (porcentaje)",
+                      "Modos de escena",
+                      "Enfoque manual",
+                      "Estabilización de imagen",
+                      "Prioridad de apertura",
+                      "Orientación del sensor" ,
+                      "Puntuación CIPA de estabilización de imagen",
+                      "Observaciones sobre grabación en vídeo",
+                      "URL de imagen de la cámara",
+                      "Tipo de micrófono",
+                      "Puntuación con rendimeinto con luz baja e ISO alto",
+                      "Campo de visión",
+                      "Bracketing de balance de blancos",
+                      "Puntuación de las características de la camera y fotografía",
+                      "Procesador",
+                      "Ratio de imagen ancho x alto",
+                      "Distancia mínima modo macro",
+                      "Tipo de cuerpo", # IMPORTANTE
+                      "Conector de cascos",
+                      "Número de reviews", # Extraer número con expresión regular
+                      "Tipos de almacenamientos", 
+                      "Número de puntos de enfoque", # IMPORTANTE
+                      "Almacenamiento incluido") 
+                  )
+kable(description_df,caption="**Propiedades de las cámaras**") %>% kable_styling()
+```
+
+En primer lugar, a continuación mostraremos las columnas que vamos a seleccionar del dataset, además de renombrarlas a los nombres indicados.
+
+## Variables cuantitativas
+
+- Los relativos a la **puntuación del equipo de expertos** de dpreview:
+  - `review_score`: Puntuación de la review. Renombramos a `puntuacion.review`
+  - `Build.quality`: Puntuación calidad de construcción. Renombramos a `puntuacion.calidad_construccion`
+  - `Performance`: Puntuación del rendimiento. Renombramos a `puntuación.rendimiento`
+  - `Screen.Quality`: Puntuación de la calidad de la pantalla. Renombramos a `puntuacion.calidad.pantalla`
+  - `Viewfinder…screen.rating`: Puntuación del visor. Renombramos a `puntuacion.visor`
+  - `Speed.and.Responsiveness`: Puntuación velocidad y respuesta. Renombramos a `puntuacion.velocidad_respuesta`
+  - `Video.Quality`: Puntuación de calidad de vídeo. Renombramos a `puntuacion.calidad_video`
+  - `Still.Image.Quality`: Puntuación de imagen fija. Renombramos a `puntuacion.calidad_imagen_fija`
+  - `Value`: Puntuación general. Renombramos a `puntuacion.general`
+  - `Movie…video.mode`: Puntuación del modo vídeo. Renombramos a `puntuacion.modo_video`
+  - `Image.quality..raw.`: Puntuación de la calidad de imagen RAW. Renombramos a `puntuacion.calidad_raw`
+  - `Connectivity`: Puntuación de conectividad. Renombramos a `puntuacion.conectividad`
+  - `Metering…focus.accuracy`: Puntuación de medición y enfoque. Renombramos a `puntuacion.precision`
+  - `Image.quality..jpeg.`: Puntuación de imagen JPG. Renombramos a `puntuacion.calidad_jpg`
+  - `Optics`: Puntuación de óptica. Renombramos a `puntuacion.optica`
+  - `Ergonomics...handling`: Puntuación de ergonomía y manejo. Renombramos a `puntuacion.ergonomia_manejo`
+  - `Flash.performance`: Puntuación de rendimiento del flash. Renombramos a `puntuacion.rendimento_flash`
+  - `Performance..speed.`: Puntuación de rendimiento en velocidad. Renombramos a `puntuacion.rendimiento_velocidad`
+  - `Features`: Puntuación de características. Renombramos a `puntuacion.caracteristicas`
+  - `Exposure.and.focus.accuracy`: Puntuación de precisión de exposición y enfoque. Renombramos a `puntuacion.precision_exposicion_enfoque`
+  - `review_value`: Puntuación de review (porcentaje). Renombramos a `puntuacion.review`
+  - `Low.light…high.ISO.performance`: Puntuación con rendimeinto con luz baja e ISO alto. Renombramos a `puntuacion.luz_baja_alto_ISO`
+  - `Camera.and.Photo.Features`: Puntuación de las características de la camera y fotografía. Renombramos a `puntuacion.caracteristicas_camara_foto`
+  
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data<- rename(data,
+               puntuacion.calidad_construccion=Build.quality,
+               puntuación.rendimiento=Performance,
+               puntuacion.calidad.pantalla=Screen.Quality,
+               puntuacion.visor=Viewfinder...screen.rating,
+               puntuacion.velocidad_respuesta=Speed.and.Responsiveness,
+               puntuacion.calidad_video=Video.Quality,
+               puntuacion.calidad_imagen_fija=Still.Image.Quality,
+               puntuacion.general=Value,
+               puntuacion.modo_video=Movie...video.mode,
+               puntuacion.puntuacion_calidad_raw=Image.quality..raw.,
+               puntuacion.conectividad=Connectivity,
+               puntuacion.precision=Metering...focus.accuracy,
+               puntuacion.calidad_jpg=Image.quality..jpeg.,
+               puntuacion.optica=Optics,
+               puntuacion.ergonomia_manejo=Ergonomics...handling,
+               puntuacion.rendimento_flash=Flash.performance,
+               puntuacion.rendimiento_velocidad=Performance..speed.,
+               puntuacion.caracteristicas=Features,
+               puntuacion.precision_exposicion_enfoque=Exposure.and.focus.accuracy,
+               puntuacion.pro_review=review_value,
+               puntuacion.luz_baja_alto_ISO=Low.light...high.ISO.performance,
+               puntuacion.caracteristicas_camara_foto=Camera.and.Photo.Features)
+```
+
+- Las relativos a las **características físicas de la cámara**:
+  - `Weight..inc..batteries`: Peso. Renombramos a `caracteristicas.peso`
+  - `Dimensions`: Dimensiones (ancho x alto x fondo). Renombramos a `caracteristicas.dimensiones`
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data<- rename(data,
+               caracteristicas.peso=Weight..inc..batteries.,
+               caracteristicas.dimensiones=Dimensions)
+```
+- Las relativas al **interés por parte de los usuarios de la comunidad** de dpreview: 
+   - own_gear. Renombramos a `usuario.tiene`
+   - had_gear. Renombramos a `usuario.ha_tenido`
+   - want_gear. Renombramos a `usuario.desea`
+   - review_score: Puntuación media por parte de los usuarios de la comunidad. Renombramos a `usuario.puntuacion`
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data<- rename(data,
+               usuario.tiene=own_gear,
+               usuario.ha_tenido=had_gear,
+               usuario.desea=want_gear,
+               usuario.puntuacion=review_score)
+```
+
+- El **precio de la cámara**: `MSRP`. Renombramos a `precio`
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data<- rename(data,
+               precio=MSRP)
+```
+
+- Las relativas a **características técnicas** de la cámara: 
+    - `Max.resolution`: resolución, renombramos a `caracteristicas.resolucion`
+    -` Maximum.shutter.speed`: velocidad máxima de obturador, renombramos a `caracteristicas.velocidad_obturador`
+    
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data<- rename(data,
+               caracteristicas.resolucion=Max.resolution,
+               caracteristicas.velocidad_obturador=Maximum.shutter.speed
+              )
+```
+
+  
+## Variables cualitativas
+- Marca y  modelo de la cámara:
+    - `Brand`: Marca, renombramos a `marca`
+    - `name`: Modelo, renombramos a `modelo`
+- Otras características:
+    - `Body.type`: Tipo de cuerpo, renombramos a `tipo_cuerpo`
+    - `Sensor.type`: Tipo de sensor, renombramos a `tipo_sensor`
+    - `announcement_date`: Fecha de lanzamiento, renombramos a `fecha_lanzamiento`
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data<- rename(data,
+               marca=brand,
+               modelo=name,
+               tipo_cuerpo=Body.type,
+               tipo_sensor=Sensor.type,
+               fecha_lanzamiento=announcement_date
+              )
+```
+
+Convertimos a factor los atributos:
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data$marca<-as.factor(data$marca)
+data$tipo_cuerpo<-as.factor(data$tipo_cuerpo)
+data$tipo_sensor<-as.factor(data$tipo_sensor)
+data$caracteristicas.velocidad_obturador<-as.factor(data$caracteristicas.velocidad_obturador)
+data$GPS <- as.factor(data$GPS)
+```
+
+Finalmente aplicamos la reducción de la dimensionalidad, filtrando únicamente las columnas que nos interesan
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data <- data[ , grepl( "puntuacion|caracteristicas|tipo_|fecha_lanzamiento|marca|modelo|precio|GPS" , names( data ) ) ]
+```
+
+## Extraccción de valores numéricos
+
+### Atributo `precio`
+Los valores de la columna `precio` tiene diversos tipos de valores. En la mayoría de las filas contiene un único precio en dólares, precedido del símbolo de dolar (p.ej. `$899`), pero en algunos casos incluye varios precios en función del kit a comprar (con objetivo, sin objetivo, con varios ojetivos,...) y en otros casos se muestra el precio tanto en dólares como en otras monedas (euro y libras).
+
+Para simplificar la extracción, nos quedaremos con el primer precio que aparezca precedido del símbolo del dólar utilizando una expresión regular. 
+
+Otras posibles alternativas en el tratamiento de este atributo podría haber sido obtener todos los posibles valores precedidos del símbolo dólar y quedarnos con el máximo, o hacer una conversión entre divisas según el cambio euro->dólar y libra->dolar.
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data$precio<-as.integer(str_extract(str_extract(data$precio, "(\\$\\d+)"),"(\\d+)"))
+```
+
+
+### Atributo `puntuacion.pro_review`
+
+Este atributo contiene un porcentaje que incluye el símbolo `%`. Interesa convertirlo a entero y eliminar ese porcentaje. Utilizaremos para ello una expresión regular y la función `str_extract` del paquete `stringr`
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data$puntuacion.pro_review<-as.integer(str_extract(data$puntuacion.pro_review, "(\\d+)"))
+```
+
+### Atributo `caracteristicas.peso`
+
+Este atributo expresa el peso tanto en gramos como en libras y onzas. Utilizaremos una expresión regular para quedarnos con el peso en gramos
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data$caracteristicas.peso<-as.integer(str_extract(data$caracteristicas.peso, "(\\d+)"))
+```
+
+### Atributo `caracteristicas.dimensiones`
+
+Este atributo expresa el tamaño (ancho x alto x fondo) en milímetros. A partir del mismo es posible establecer una nueva variable volumen
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+data$dim.ancho<-as.integer(str_match(data$caracteristicas.dimensiones, "(\\d+) x (\\d+) x (\\d+)")[,2])
+data$dim.alto<-as.integer(str_match(data$caracteristicas.dimensiones, "(\\d+) x (\\d+) x (\\d+)")[,3])
+data$dim.fondo<-as.integer(str_match(data$caracteristicas.dimensiones, "(\\d+) x (\\d+) x (\\d+)")[,4])
+
+# Calculamos el volumen
+data$caracteristicas.volumen <- data$dim.ancho  * data$dim.alto * data$dim.fondo
+
+# data %>% select(caracteristicas.dimensiones,dim.ancho,dim.alto,dim.fondo, caracteristicas.volumen)
+
+# Eliminamos las columnas innecesarias
+data <- data %>% select (-c(caracteristicas.dimensiones,dim.ancho, dim.alto,dim.fondo))
+```
+## Ajuste de variables discretas
+
+### Tipo de sensor
+
+La variable `tipo_sensor` contiene diversos valores que se pueden agrupar en dos grandes grupos: CCD y CMOS. Realizamos esta simplificación:
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# https://stackoverflow.com/questions/25372082/create-column-based-on-presence-of-string-pattern-and-ifelse
+data$tipo_sensor<-ifelse(grepl("CMOS",data$tipo_sensor),'CMOS','CCD')
+```
+
+
+## Extracción de fecha
+
+La fecha de lanzamiento de la cámara viene especificada en el atributo `fecha_lanzamiento`.
+
+El formato del campo varía en función de si el lanzamiento ha sido hace menos de un año (p.ej. "`Announced 7 months ago`"), o hace más de un año (p.ej. "`Announced Jan 15, 2016`"). En cualquier caso, de cara al análisis sólo nos interesa quedarnos con el año de lanzamiento. Utilizaremos una expresión regular para obtener el año, y en caso de que no tenga éxito, asignaremos el valor actual.
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data$fecha_lanzamiento <- as.integer(str_extract(data$fecha_lanzamiento, "(\\d\\d\\d\\d)"))
+# Asignamos por defecto al año 2020
+data[is.na(data$fecha_lanzamiento),"fecha_lanzamiento"] = 2020
+data$fecha_lanzamiento <-as.factor(data$fecha_lanzamiento)
+```
+
+
+## Resumen de los datos
+
+A continuación se muestra un resumen de las variables del dataset
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+summary(data)
+```
+
+# Limpieza de datos
+## ¿Los datos contienen ceros o elementos vacíos? ¿Como gestionarías cada uno de estos casos?
+
+### Comprobar atributos con valores vacíos
+
+Vamos a verificar si el dataset incluye elementos vacíos:
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+sapply(data, function(x) sum(is.na(x)))
+```
+
+
+Se comprueba que efectivamente el `dataset` contiene un gran número de elementos vacíos, especialmente en las columnas de puntuación.
+El primer tratamiento que realizaremos es asignar `NA` a los atributos con valor cadena vacía.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data <- data %>% mutate_all(list(~na_if(.,"")))
+```
+
+
+Eliminamos todos aquellos atributos tipo "puntuación" que tengan más del 90% de atributos con valor `NA`
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+#https://stackoverflow.com/questions/31848156/delete-columns-rows-with-more-than-x-missing
+data.puntuacion <- data%>%select(starts_with("puntuacion"))
+atributes_to_remove<-colnames(data.puntuacion[, which(colMeans(is.na(data.puntuacion)) > 0.9)])
+data<-data %>% select(-atributes_to_remove)
+```
+
+Además, dado que nuestra variable objetivo es el precio, eliminamos todas aquellas filas para las que el precio no se encuentra definido. Esto supondrá una reducción significativa en el `dataset`.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data <- data %>% filter (!is.na(precio))
+```
+
+
+### Verificar duplicación de registros
+
+No existe un campo ID. Se puede verificar la existencia de duplicados mediante la combinación de campos Brand+Name.
+
+Para comprobar si hay algún registro repetido utilizamos la función `unique` que proporciona los elementos únicos de una lista, en combinación con la función `nrow`, que obtiene el número de filas de un dataframe.
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+if (nrow(unique(data[,c("marca","modelo")]))!=nrow(data[,c("marca","modelo")])){
+  print("Hay alguna cámara repetida")
+}else{
+  print("No hay ninguna cámara repetida")
+}
+```
+
+
+### Imputación de valores vacios
+
+#### Puntuaciones
+
+Para todos los atributos de tipo ´puntuacion.xxxx´, imputamos inicialmente con la **media de la misma marca y tipo de cuerpo**:
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data<-data %>%
+    group_by(marca,tipo_cuerpo) %>%
+    mutate_each(funs(replace(., which(is.na(.)), mean(., na.rm=TRUE))), 
+       starts_with('puntuacion'))
+```
+
+En caso de los valores que sigan siendo `NA` utilizamos la **media de la marca**:
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data<-data %>%
+    group_by(marca) %>%
+    mutate_each(funs(replace(., which(is.na(.)), mean(., na.rm=TRUE))), 
+       starts_with('puntuacion'))
+```
+
+Y si continua siendo `NA` imputamos por la **media general de la puntuación**:
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data<-data %>%
+    mutate_each(funs(replace(., which(is.nan(.)), mean(., na.rm=TRUE))), 
+       starts_with('puntuacion'))
+```
+
+## Identificación y tratamiento de valores extremos
+
+Identificamos a continuación los valores extremos. Nosotros lo realizaremos para los valores de precio, peso y la puntuación de proreview.
+
+
+### Precio
+
+Veamos los valores extremos del precio de las cámaras
+
+```{r message= FALSE, warning=FALSE}
+boxplot(data$precio)
+out = boxplot.stats(data$precio)$out
+out
+```
+
+Para el precio tenemos muchos valores extremos. Como podemos comprobar los datos con la misma página de dpreview.com para ver si se ha realizado bien la extracción, antes de tomar cualquier decisión podemos comprobar si los datos se han extraído bien de la página.
+
+Tras una breve comprobación, vemos como cámaras como LEICA M10-R vale 8295 dólares, LEICA M10 Monochrom vale también 8295 dólares, o Fujifilm GFX 100 Specs cuesta 9999 dólares.
+
+Por lo tanto, tras comprobar los valores extremos en la web, vemos que no son errores sino valores reales. Y decidimos quedárnoslos y trabajar con ellos.
+
+
+### Peso
+
+Veamos los valores extremos del peso de las cámaras
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+boxplot(data$caracteristicas.peso)
+out = boxplot.stats(data$caracteristicas.peso)$out
+out
+
+filter(data, caracteristicas.peso > 1700)$modelo
+```
+
+Este caso es similar al anterior, por lo que también comprobaremos un par de cámaras para ver si nos encontramos ante casos reales o errores.
+
+En la misma página web, podemos observar como Kodak DCS315 pesa 1.800 g y Kodak DCS760 pesa 1860 g.
+
+Por lo tanto, nos encontramos ante valores reales y trabajaremos con ellos.
+
+
+
+### Puntuacion.proreview
+
+Veamos los valores extremos de la puntuación proreview de las cámaras
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+boxplot(data$puntuacion.pro_review)
+out = boxplot.stats(data$puntuacion.pro_review)$out
+out
+```
+
+En este caso también nos encontramos varios valores extremos, pero todos se comprenden entre el 0 y el 100, por lo que los damos como buenos ya que son los valores entre los que puede estar la cámara.
+
+## Archivo limpio
+
+Para guardar el `dataframe` resultado del procesamiento utilizamos la función `write.csv`:
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+write.csv(data, 'dpreview_clean.csv', row.names = FALSE)
+```
+# Análisis de los datos
+
+## Selección de los grupos de datos que se quieren analizar/comparar (planificación de los análisis a aplicar).
+
+En primer lugar se seleccionan los datos que se quieren analizar/comparar. En este ejercicio, el objetivo es realizar los análisis exploratorios que se han determinado en el primer apartado.
+
+Para ello se realizará la comprobación de normalidad y homogeneidad de la varianza.
+
+Análisis estadístico para comparar los grupos de datos:
+- Análisis del precio en función del tipo de cuerpo
+- Análisis del tipo de sensor por fecha de lanzamiento
+- Análisis de la evolución del tipo de cuerpo.
+- Comparación de valoración de los usuarios entre cámaras Canon y Nicon
+- Creación de modelo para predecir la puntuación general de una cámara
+- Creación de modelo para predecir el precio de una cámara
+
+## Comprobación de la normalidad y la homogeneidad de la varianza
+
+La comprobación de la normalidad es necesaria para poder realizar análisis posteriores como por ejemplo el contraste de hipótesis.
+Para la comprobación de la normalidad nos basaremos en el teorema del límite central, según el cual una muestra mayor de 30 se podrá considerar que sigue una distribución normal.
+
+### Precio en función del tipo de cuerpo
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+cuerpos = na.omit(unique(data$tipo_cuerpo))
+for (cuerpo in cuerpos){
+  print(cuerpo)
+  print(length(filter(data, tipo_cuerpo == cuerpo)$precio))
+
+}
+```
+
+Como vemos, todas las muestras, a excepción de "VR/Action camera" cuentan con más de 30 elementos, por lo que se puede aplicar el Teorema del Límite Central  y podemos considerar que la media de cada muestra sigue una distribución normal.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+plot(x = data$tipo_cuerpo)
+```
+
+## Puntuación general para Nikon y Canon
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+length( filter(data, marca=="Nikon")$puntuacion.general)
+length( filter(data, marca=="Canon")$puntuacion.general)
+
+```
+
+En este caso, ambos conjuntos superan las 30 muestras y podemos asumir normalidad por el TLC.
+
+Procedemos a comprobar la homogeneidad de la varianza para los dos grupos mediante el test de Barlett.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+bartlett.test(list(data$puntuacion.general[data$marca == "Nikon"],data$puntuacion.general[data$marca == "Canon"]))
+
+```
+
+Nos encontramos ante un p-value muy inferior a 0.05, por lo que podemos afirmar que ambas varianzas son similares.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data_canon_nikon = filter(data, marca %in% c("Nikon","Canon"))
+ggplot(data=data_canon_nikon, aes(x=marca, y= puntuacion.general, colour = marca)) + geom_boxplot() + geom_point() 
+```
+
+
+## Aplicación de pruebas estadísticas para comparar los grupos de datos. En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc. Aplicar al menos tres métodos de análisis diferentes.
+
+### Correlación entre variables 
+
+En primer lugar vamos a realizar un análisis visual de la correlación entre las variables numéricas.
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Fuente: http://www.sthda.com/english/wiki/correlation-matrix-an-r-function-to-do-all-you-need
+#install.packages("corrplot")
+library(corrplot)
+source("http://www.sthda.com/upload/rquery_cormat.r")
+nums <- unlist(lapply(data, is.numeric)) 
+rquery.cormat(data[ , nums])
+#corrplot(cor(data[, nums]), type="upper")
+```
+
+### Análisis exploratorio
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(data, aes(x=precio, y=tipo_cuerpo)) + 
+    geom_boxplot()
+```
+
+Lógicamente las cámaras más caras son las SLR "grandes", que son las que se emplean profesionalmente. Las compactas, ultracompactas y cámaras de acción son las más asequibles.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(data, aes(x=fecha_lanzamiento, fill=tipo_sensor)) +
+    geom_bar()+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+Se puede observar que el *boom* de las cámaras digitales tuvo lugar entre el año 2000 y el año 2015. Posiblemente el declive se debió a mejora de las cámaras de los dispositivos móviles. Asimismo se puede observar, a través del código de colores, la evolución en el tipo de sensores que equipan las cámaras, pasando de sensores CCD en las fases iniciales a sensores CMOS, que han copado el mercado desde el 2013.
+
+
+Veamos la evolución a continuación en función del tipo de cámara:
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(data, aes(x=fecha_lanzamiento, fill=tipo_cuerpo)) +
+    geom_bar()+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+Como habíamos indicado anteriormente, la aparición de dispositivos móviles con cámaras de calidad ha hecho desaparecer prácticamente por completo el segmento de las cámaras compactas y ultracompactas, manteniendose únicamente actualizadas el sector de las cámaras profesionales.
+
+
+### Pruebas de hipótesis
+
+Siempre ha habido un gran debate entre los profesionales de la fotografía acerca de qué marca es mejor, si Canon o Nikon.
+Vamos a verificar mediante un contraste de hipótesis sobre la variable `puntuacion.general` si existe una diferencia significativa entre ambas marcas.
+
+Las hipótesis nula y alternativa serían:
+
+- $H_0$: No existe una diferencia significativa entre Canon y Nikon
+- $H_1$: Sí existe una diferencia significativa entre Canon y Nikon
+
+
+Suponemos normalidad en las muestras  por el Teorema del Límite Central dado que contamos con un conjunto de muestras grande.
+
+Comprobamos la homogeneidad de varianzas
+```{r message= FALSE, warning=FALSE}
+var.test( data %>%filter(marca=="Nikon")%>%pull(puntuacion.general), data %>%filter(marca=="Canon")%>%pull(puntuacion.general) )
+```
+El p-value da un valor por debajo de 0.05, por lo que podemos suponer que las muestras tienen la misma varianza con un 95% de confianza.
+
+Aplicamos a continuación el contraste de hipótesis
+```{r message= FALSE, warning=FALSE}
+t.test( data %>%filter(marca=="Nikon")%>%pull(puntuacion.general),
+        data %>%filter(marca=="Canon")%>%pull(puntuacion.general), # dos muestras 
+        alternative = "two.sided", # contraste bilateral 
+        paired = FALSE, # muestras independientes
+        var.equal = TRUE ) # se supone homocedasticidad
+```
+
+En este caso el resultado del t-test ofrece un `p-value` de 4.251e-08, inferior a 0.05, con lo que rechazamos la hipótesis nula y confirmamos con un 95% de confianza que nohay diferencia significativa entre la puntuación general de Canon y Nikon.
+
+
+### Regresión lineal
+
+### Puntuacion
+
+A continuación construiremos un modelo de regresión lineal para tratar de predecir la puntuación de la cámara en función de diferentes valores.
+
+Los valores que se analizarán son el precio, el peso, la puntuación en ergonomía, la puntuación de las características y la puntuación de la precisión de la cámara.
+
+
+```{r message= FALSE, warning=FALSE}
+lineal_regression = lm(puntuacion.general ~ precio + caracteristicas.peso + puntuacion.ergonomia_manejo + puntuacion.caracteristicas + puntuacion.precision, data = data)
+summary(lineal_regression)
+```
+
+Podemos ver como el precio o el peso prácticamente no tienen relación con la puntuación general que recibe una cámara.
+
+La puntuación en la ergonomia o las características si que afectan de forma positiva en la puntuación general que recibirá la cámara. En cambio, la puntuación en la precisión de la cámara afecta de forma negativa en la puntuación final que esta tendrá.
+
+Aún y así, la R-squared de la regresión lineal hecha es de 0.25 por lo que las previsiones que se pueden hacer con este modelo no se ajustarán mucho a la realidad.
+
+#### Precio
+
+A continuación, veremos si podemos crear un modelo que se ajuste más a la realidad que el anterior, para predecir el precio de una cámara.
+
+Los valores que se analizarán son la puntuación general, si tiene GPS o no, la puntuación en ergonomía, la puntuación de las características , la puntuación del visor y el tipo de cuerpo de la cámara
+
+
+```{r message= FALSE, warning=FALSE}
+lineal_regression = lm(precio ~ puntuacion.general + GPS + puntuacion.ergonomia_manejo + puntuacion.caracteristicas  + puntuacion.visor + tipo_cuerpo, data = data)
+summary(lineal_regression)
+```
+
+En este caso vemos como la mayoría de factores tienen una gran repercusión en el precio final. 
+
+Por ejemplo, el hecho de no tener GPS disminuye en 130 dólares el precio final.
+
+También podemos ver como el tipo de cuerpo "Large SLR" aumenta el precio final en 5.320 dólares.
+
+Además, un hecho sorprendete es que la puntuación general es inversamente proporcional al precio que tendrá la cámara.
+
+En este caso, la R-squared nos da un valor de 0.5272, que aunque no es el valor deseado, si que es un valor con el que se puede trabajar y hacer predicciones.
+
+### Correlación
+
+En este apartado buscaremos si existe correlación entre las variables numéricas que hemos usado con anterioridad, que son: puntuacion.general, precio, puntuacion.ergonomia_manejo, puntuacion.caracteristicas y  
+puntuacion.visor.
+
+
+```{r message= FALSE, warning=FALSE}
+data_correlation = select(data, x=c(puntuacion.general, precio, puntuacion.ergonomia_manejo, puntuacion.caracteristicas, puntuacion.visor))
+colnames(data_correlation) = c("puntuacion.general", "precio", "puntuacion.ergonomia_manejo", "puntuacion.caracteristicas", "puntuacion.visor")
+plot(data_correlation)
+```
+
+En los gráficos anteriores podemos ver las diferentes características numéricas  pintadas una frente a otra. Aunque no se aprecia ningún caso de relación lineal, haremos el análisis de correlaciones en profundidad.
+
+```{r message= FALSE, warning=FALSE}
+cor.test(data$puntuacion.general, data$precio, method = "spearman")
+```
+
+```{r message= FALSE, warning=FALSE}
+cor.test(data$puntuacion.general, data$puntuacion.ergonomia_manejo, method = "spearman")
+```
+
+```{r message= FALSE, warning=FALSE}
+cor.test(data$puntuacion.general, data$puntuacion.caracteristicas, method = "spearman")
+```
+
+```{r message= FALSE, warning=FALSE}
+cor.test(data$puntuacion.general, data$puntuacion.visor, method = "spearman")
+```
+
+```{r message= FALSE, warning=FALSE}
+cor.test(data$precio, data$puntuacion.ergonomia_manejo, method = "spearman")
+```
+
+```{r message= FALSE, warning=FALSE}
+cor.test(data$precio, data$puntuacion.caracteristicas, method = "spearman")
+```
+
+```{r message= FALSE, warning=FALSE}
+cor.test(data$precio, data$puntuacion.visor, method = "spearman")
+```
+
+```{r message= FALSE, warning=FALSE}
+cor.test(data$puntuacion.ergonomia_manejo, data$puntuacion.caracteristicas, method = "spearman")
+```
+
+```{r message= FALSE, warning=FALSE}
+cor.test(data$puntuacion.ergonomia_manejo, data$puntuacion.visor, method = "spearman")
+```
+
+```{r message= FALSE, warning=FALSE}
+cor.test(data$puntuacion.caracteristicas, data$puntuacion.visor, method = "spearman")
+```
+
+El test de correlación devuelve un resultado entre [-1,1] donde los extremos indican una alta correlación y el 0 una correlación nula.
+
+En este cruce entre las variables anteriores, la mayoría de ellas muestran valores muy próximos al 0, por lo que en la mayoría de ellas no existe correlación.
+
+Aún y así podemos encontrar una correlación positiva entre la puntuación de las características y la puntuación del visor, entre el precio y la punutuación de ergonomía y manejo, y entre el precio y la puntuación de las características.
+
+# Representación de los resultados a partir de tablas y gráficas.
+
+Todos los resultados obtenidos se han ido presentando en cada uno de los apartados en tablas y gráficas.
+
+# Resolución del problema. A partir de los resultados obtenidos, ¿Cuáles son las conclusiones? ¿Los resultados permiten responder al problema?
+
+Creemos que el dataset con el que se ha trabajado en esta práctica resulta ideal para los objetivos de la misma. Es un *dataset* que requiere mucho tratamiento de limpieza, extracción de valores y conversión de tipos. El hecho de que no sea un *dataset* académico clásico imposibilita encontrar referencias de trabajos previos de limpieza.
+
+Los datos, una vez tratados, nos han servido para elaborar modelos, que aunque con baja precisión, se podrían emplear para realizar predicciones.
+
+En cuanto a las conclusiones que hemos obtenido a partir de los análisis realizados sobre los datos, a continuación las listamos:
+
+* Las cámaras más caras son las SLR grandes, mientras que las más baratas son compactas, ultracompactas y cámaras de acción asequibles.
+* El boom de las cámaras dígitales tuvo lugar entre 2014 y 2015, mientras que a partir de ahí los precios han ido disminuyendo como consecuencia de las mejoras en las cámaras de los móviles.
+*Las cámaras compactas y ultracompactas prácticamente han desaparecido debido a la explosión de las cámaras en los teléfonos móviles, mientras que las cámaras profesionales se han mantenido.
+* Se puede afirmar con un p-value de 4,2e-8 que no hay diferencias en las puntuaciones de las cámaras Canon y Nikon.
+* Valores como el peso o el precio prácticamente no tienen relación con la puntuación general de la cámara, en cambio la ergonomía o las características de esta si que afectan de forma positiva, mientras que la precisión afecta de forma negativa.
+* Mientras que la puntuación general de la cámara es inversamente proporcional al precio final de esta, el hecho de tener GPS aumenta 130 dólares el precio final, o el hecho de ser de cuerpo tipo "Large SLR" lo aumenta en 5.320 dólares.
+*Aunque entre la mayoría de variables no existen correlaciones, podemos ver como si que existen entre la puntuación de las características y la puntuación del visor, entre el precio y la puntuación de ergonomía, y entre el precio y la puntuación de las características.
+
+# Referencias
+
+* Introducción a la limpieza y análisis de datos.  Calvo, M., Pérez, D., Subirats, L. (2019).  Editorial UOC.
+* Identificar y eliminar duplicados: [https://www.datanovia.com/en/lessons/identify-and-remove-duplicate-data-in-r/]
+* Tabla con medidas de tendencia central y dispersión: [https://cran.r-project.org/web/packages/qwraps2/vignettes/summary-statistics.html]
+* My favourite R package for: summarising data [https://dabblingwithdata.wordpress.com/2018/01/02/my-favourite-r-package-for-summarising-data/]
