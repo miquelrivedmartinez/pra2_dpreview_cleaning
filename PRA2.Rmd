@@ -1,9 +1,12 @@
   
 ---
 title: 'Tipología y ciclo de vida de los datos: PRA2'
-author: "Autor: Pablo Benito y Miquel Rived"
-date: "Junio 2021"
+author: "Autor: Miquel Rived"
+date: "Enero 2022"
 output:
+  pdf_document:
+    highlight: zenburn
+    toc: yes
   html_document:
     highlight: default
     number_sections: yes
@@ -12,9 +15,6 @@ output:
     toc_depth: 2
     includes:
       in_header: PEC-header.html
-  pdf_document:
-    highlight: zenburn
-    toc: yes
   word_document: default
 editor_options: 
   chunk_output_type: inline
