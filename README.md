@@ -17,10 +17,10 @@ Se ha querido proseguir con el proyecto para realizar todo el ciclo de vida de u
 
 En este repositorio se encuentran los siguientes ficheros:
 
-* PRA2.rmd : El código fuente del *notebook* se puede consultar [aquí](https://github.com/miqu/dpreview_clean/blob/main/PRA2.Rmd). 
-* PRA2.html: El resultado de la ejecución del *notebook* se puede consultar [aquí](https://htmlpreview.github.io/?https://github.com/pbenito1/dpreview_clean/blob/main/PRA2.html). En este archivo se pueden ver las respuestas a las preguntas dadas en el enunciado de la práctica
-* dpreview.csv: El archivo csv a partir del cual se ha realizado la limpieza se puede consultar [aquí](https://github.com/pbenito1/dpreview_clean/blob/main/dpreview.csv)
-* dpreview_clean.csv: El archivo csv limpio se puede consultar [aquí](https://github.com/pbenito1/dpreview_clean/blob/main/dpreview_clean.csv)
+* PRA2.rmd : El código fuente del *notebook* se puede consultar [aquí](https://github.com/miquelrivedmartinez/pra2_dpreview_cleaning/blob/main/PRA2.Rmd). 
+* PRA2.pdf: El resultado de la ejecución del *notebook* se puede consultar [aquí](https://github.com/miquelrivedmartinez/pra2_dpreview_cleaning/blob/main/PRA2.pdf). En este archivo se pueden ver las respuestas a las preguntas dadas en el enunciado de la práctica
+* dpreview.csv: El archivo csv a partir del cual se ha realizado la limpieza se puede consultar [aquí](https://raw.githubusercontent.com/miquelrivedmartinez/pra2_dpreview_cleaning/main/dpreview.csv)
+* dpreview_clean.csv: El archivo csv limpio se puede consultar [aquí](https://github.com/miquelrivedmartinez/pra2_dpreview_cleaning/blob/main/dpreview_clean.csv)
 
 # Descripción del dataset. ¿Por qué es importante y qué pregunta/problema pretende responder?
 
@@ -49,7 +49,7 @@ Este ejercicio se ha resuelto en el fichero de código, dónde se puede ver como
 
 # Limpieza de Datos
 
-Este ejercicio se ha resuelto en el fichero de código.com
+Este ejercicio se ha resuelto en el fichero de código
 
 ## ¿Los datos contienen ceros o elementos vacíos? ¿Como gestionarías cada uno de estos casos?
 
