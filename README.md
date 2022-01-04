@@ -34,10 +34,12 @@ Por otro lado, se tratará de determinar qué cámaras son las más valoradas po
 
 Los datos permiten responder a preguntas del tipo:
 
-* ¿Cuál es la cámara mejor valorada por los usuarios?
-* ¿Cuál es la cámara más cara y más ergónomica?
-* ¿Qué cámara es capaz de disparar más fotografías en modo ráfaga?
-* ¿Cuál es la cámara con GPS más ligera y mayor autonomía de batería?
+* ¿Qué tipo de cuerpo tienen las cámaras más caras?
+* ¿Cómo han evolucionado los precios de las cámaras a lo largo del tiempo?
+* ¿Existen diferencias entre las puntuaciones de las cámaras Canon y Nikon?
+* ¿Qué caracterísiticas influyen más en el precio de la cámara?
+* ¿Que características influyen más en la valoración por parte de los usuarios de una cámara?
+
 
 Estas preguntas pueden variar a lo largo de las prácticas, ya que disponemos de una gran variedad de cámaras y campos para analizarlas que seguro que al visualizar con mayor detenimiento nos hacen hacernos nuevas preguntas.
 
