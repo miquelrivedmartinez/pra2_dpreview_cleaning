@@ -114,4 +114,4 @@ En cuanto a las conclusiones que hemos obtenido a partir de los análisis realiz
 
 # Código: Hay que adjuntar el código, preferiblemente en R, con el que se ha realizado la limpieza, análisis y representación de los datos. Si lo preferís, también podéis trabajar en Python.
 
-* PRA2.html: El resultado de la ejecución del *notebook* se puede consultar [aquí](https://htmlpreview.github.io/?https://github.com/pbenito1/dpreview_clean/blob/main/PRA2.html). En este archivo se pueden ver las respuestas a las preguntas dadas en el enunciado de la práctica
+* PRA2.pdf: El resultado de la ejecución del *notebook* se puede consultar [aquí](https://github.com/miquelrivedmartinez/pra2_dpreview_cleaning/blob/main/PRA2.pdf). En este archivo se pueden ver las respuestas a las preguntas dadas en el enunciado de la práctica
